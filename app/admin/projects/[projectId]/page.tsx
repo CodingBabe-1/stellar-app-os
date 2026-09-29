@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { AdminProjectDetailView } from '@/components/organisms/AdminProjectDetail/AdminProjectDetailView';
 import { getMockAdminProjectDetailById } from '@/lib/api/mock/adminProjectDetails';
+import { getMockOffsetProjects } from '@/lib/api/mock/offsetProjects';
 
 interface AdminProjectDetailSearchParams {
   projectType?: string;
@@ -36,19 +37,53 @@ export default async function AdminProjectDetailPage({
     ? filters.coBenefits.split(',').map((benefit) => benefit.trim()).filter(Boolean)
     : undefined;
 
-  const minPrice = filters?.minPrice !== undefined ? Number(filters.minPrice) : undefined;
-  const maxPrice = filters?.maxPrice !== undefined ? Number(filters.maxPrice) : undefined;
+  const minPrice = filters?.minPrice ? Number(filters.minPrice) : undefined;
+  const maxPrice = filters?.maxPrice ? Number(filters.maxPrice) : undefined;
+
+  const filteredProjects = getMockOffsetProjects().filter((offsetProject) => {
+    if (filters?.projectType && offsetProject.projectType !== filters.projectType) {
+      return false;
+    }
+
+    if (filters?.location && offsetProject.location !== filters.location) {
+      return false;
+    }
+
+    if (filters?.certificationStandard && offsetProject.certificationStandard !== filters.certificationStandard) {
+      return false;
+    }
+
+    if (coBenefits && coBenefits.length > 0) {
+      const projectBenefits = offsetProject.coBenefits ?? [];
+      const hasAllCoBenefits = coBenefits.every((benefit) => projectBenefits.includes(benefit));
+
+      if (!hasAllCoBenefits) {
+        return false;
+      }
+    }
+
+    if (minPrice !== undefined && offsetProject.price < minPrice) {
+      return false;
+    }
+
+    if (maxPrice !== undefined && offsetProject.price > maxPrice) {
+      return false;
+    }
+
+    return true;
+  });
 
   return (
     <AdminProjectDetailView
       initialProject={project}
+      initialProjects={filteredProjects}
       initialFilters={{
         projectType: filters?.projectType,
         location: filters?.location,
         coBenefits,
         certificationStandard: filters?.certificationStandard,
-        minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
-        maxPrice: Number.isFinite(maxPrice) ? maxPrice : undefined,
+        minPrice,
+        maxPrice,
       }}
     />
   );
