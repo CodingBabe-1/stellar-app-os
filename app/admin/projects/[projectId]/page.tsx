@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { AdminProjectDetailView } from '@/components/organisms/AdminProjectDetail/AdminProjectDetailView';
 import { getMockAdminProjectDetailById } from '@/lib/api/mock/adminProjectDetails';
-import { parseCoBenefits } from '@/lib/utils/coBenefits';
 
 interface AdminProjectDetailSearchParams {
   projectType?: string;
@@ -33,7 +32,12 @@ export default async function AdminProjectDetailPage({
     return null;
   }
 
-  const coBenefits = parseCoBenefits(filters?.coBenefits);
+  const coBenefits = filters?.coBenefits
+    ? filters.coBenefits.split(',').map((benefit) => benefit.trim()).filter(Boolean)
+    : undefined;
+
+  const minPrice = filters?.minPrice !== undefined ? Number(filters.minPrice) : undefined;
+  const maxPrice = filters?.maxPrice !== undefined ? Number(filters.maxPrice) : undefined;
 
   return (
     <AdminProjectDetailView
@@ -43,8 +47,8 @@ export default async function AdminProjectDetailPage({
         location: filters?.location,
         coBenefits,
         certificationStandard: filters?.certificationStandard,
-        minPrice: filters?.minPrice ? Number(filters.minPrice) : undefined,
-        maxPrice: filters?.maxPrice ? Number(filters.maxPrice) : undefined,
+        minPrice: Number.isFinite(minPrice) ? minPrice : undefined,
+        maxPrice: Number.isFinite(maxPrice) ? maxPrice : undefined,
       }}
     />
   );
