@@ -3,8 +3,13 @@ import { getPool } from '@/lib/db/client';
 import { isAdminRequest } from '@/lib/auth/admin';
 import { getTreeAnalytics, parseTreeAnalyticsFilters } from '@/lib/analytics/tree-survival';
 import { getCarbonOffsetEstimate, parseCarbonOffsetInput } from '@/lib/analytics/carbon-offset';
+import { searchOffsetProjects, parseOffsetProjectFilters } from '@/lib/analytics/offset-projects';
 
 export const runtime = 'nodejs';
+
+const OFFSET_PROJECT_CACHE_HEADERS = {
+  'Cache-Control': 'private, max-age=60, stale-while-revalidate=300',
+} as const;
 
 /**
  * GET /api/admin/analytics/tree-survival
@@ -16,11 +21,24 @@ export async function GET(request: Request): Promise<NextResponse> {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  const url = new URL(request.url);
+  if (url.searchParams.get('resource') === 'offset-projects') {
+    try {
+      const filters = parseOffsetProjectFilters(url.searchParams);
+      const projects = await searchOffsetProjects(getPool(), filters);
+      return NextResponse.json({ projects }, { headers: OFFSET_PROJECT_CACHE_HEADERS });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to search offset projects';
+      const status = /must be|valid|range|non-negative/.test(message) ? 400 : 500;
+      console.error('[offset-project-search]', error);
+      return NextResponse.json({ error: message }, { status });
+    }
+  }
   try {
     const filters = parseTreeAnalyticsFilters(new URL(request.url).searchParams);
     const report = await getTreeAnalytics(getPool(), filters);
     return NextResponse.json(report, {
-      headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' },
+      headers: OFFSET_PROJECT_CACHE_HEADERS,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to generate tree analytics';
@@ -44,7 +62,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const input = parseCarbonOffsetInput(await request.json());
     const estimate = getCarbonOffsetEstimate(input);
     return NextResponse.json(estimate, {
-      headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' },
+      headers: OFFSET_PROJECT_CACHE_HEADERS,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to estimate carbon offset';

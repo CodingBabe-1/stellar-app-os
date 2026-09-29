@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -15,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/molecules/Card';
 import { mockAdminProjectDetails } from '@/lib/api/mock/adminProjectDetails';
+import type { AdminProjectDetail } from '@/lib/api/mock/adminProjectDetails';
 
 export default function AdminProjectsPage(): ReactNode {
   const [projectType, setProjectType] = useState('');
@@ -24,12 +26,19 @@ export default function AdminProjectsPage(): ReactNode {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const virtualizer = useVirtualizer({
     count: mockAdminProjectDetails.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 180,
     overscan: 5,
   });
+
+  const toggleCoBenefit = useCallback((benefit: string) => {
+    setCoBenefits((prev) =>
+      prev.includes(benefit) ? prev.filter((b) => b !== benefit) : [...prev, benefit],
+    );
+  }, []);
 
   const filteredProjects = useMemo(() => {
     return mockAdminProjectDetails.filter((project) => {
@@ -43,9 +52,16 @@ export default function AdminProjectsPage(): ReactNode {
       const price = project.pricePerTonne ?? 0;
       if (minPrice && price < Number(minPrice)) return false;
       if (maxPrice && price > Number(maxPrice)) return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const searchable = [project.name, project.id, project.country, project.type]
+          .join(' ')
+          .toLowerCase();
+        if (!searchable.includes(query)) return false;
+      }
       return true;
     });
-  }, [projectType, location, coBenefits, certification, minPrice, maxPrice]);
+  }, [projectType, location, coBenefits, certification, minPrice, maxPrice, searchQuery]);
 
   const projectTypes = useMemo(
     () => Array.from(new Set(mockAdminProjectDetails.map((p) => p.type))),
@@ -59,6 +75,13 @@ export default function AdminProjectsPage(): ReactNode {
     () => Array.from(new Set(mockAdminProjectDetails.map((p) => p.certificationStandard))),
     [],
   );
+  const coBenefitOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(mockAdminProjectDetails.flatMap((p) => p.coBenefits ?? [])),
+      ).sort(),
+    [],
+  );
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:py-10">
@@ -70,6 +93,19 @@ export default function AdminProjectsPage(): ReactNode {
           Open a project to manage editable fields, MRV documents, verification, issuance history,
           and activity logs.
         </Text>
+      </div>
+
+      <div className="mb-6">
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-medium">Search Projects</span>
+          <input
+            type="search"
+            className="rounded-md border border-input bg-background px-3 py-2"
+            placeholder="Search by name, ID, country, or type"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </label>
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -121,16 +157,12 @@ export default function AdminProjectsPage(): ReactNode {
         <fieldset className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Co-benefits</span>
           <div className="flex flex-wrap gap-3">
-            {['biodiversity', 'water', 'soil'].map((benefit) => (
+            {coBenefitOptions.map((benefit) => (
               <label key={benefit} className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={coBenefits.includes(benefit)}
-                  onChange={(e) =>
-                    setCoBenefits((prev) =>
-                      e.target.checked ? [...prev, benefit] : prev.filter((b) => b !== benefit),
-                    )
-                  }
+                  onChange={() => toggleCoBenefit(benefit)}
                 />
                 <span className="capitalize">{benefit}</span>
               </label>
@@ -155,6 +187,12 @@ export default function AdminProjectsPage(): ReactNode {
             onChange={(e) => setMaxPrice(e.target.value)}
           />
         </label>
+      </div>
+
+      <div className="mb-4">
+        <Text as="p" variant="muted">
+          {filteredProjects.length} project{filteredProjects.length === 1 ? '' : 's'} found
+        </Text>
       </div>
 
       <div ref={scrollRef className="overflow-auto" style={ height: '600px' }}>

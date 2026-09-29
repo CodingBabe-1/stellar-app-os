@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { AdminProjectDetailView } from '@/components/organisms/AdminProjectDetail/AdminProjectDetailView';
 import { getMockAdminProjectDetailById } from '@/lib/api/mock/adminProjectDetails';
+import { parseCoBenefits } from '@/lib/utils/coBenefits';
 
 interface AdminProjectDetailSearchParams {
   projectType?: string;
@@ -32,9 +33,7 @@ export default async function AdminProjectDetailPage({
     return null;
   }
 
-  const coBenefits = filters?.coBenefits
-    ? filters.coBenefits.split(',').map((benefit) => benefit.trim()).filter(Boolean)
-    : undefined;
+  const coBenefits = parseCoBenefits(filters?.coBenefits);
 
   return (
     <AdminProjectDetailView
