@@ -43,15 +43,15 @@ export default function AdminProjectsPage(): ReactNode {
 
   const projectTypes = useMemo(
     () => Array.from(new Set(mockAdminProjectDetails.map((p) => p.type))),
-    [],
+    []
   );
   const locations = useMemo(
     () => Array.from(new Set(mockAdminProjectDetails.map((p) => p.country))),
-    [],
+    []
   );
   const certifications = useMemo(
     () => Array.from(new Set(mockAdminProjectDetails.map((p) => p.certificationStandard))),
-    [],
+    []
   );
 
   const virtualizer = useVirtualizer({
@@ -129,7 +129,7 @@ export default function AdminProjectsPage(): ReactNode {
                   checked={coBenefits.includes(benefit)}
                   onChange={(e) =>
                     setCoBenefits((prev) =>
-                      e.target.checked ? [...prev, benefit] : prev.filter((b) => b !== benefit),
+                      e.target.checked ? [...prev, benefit] : prev.filter((b) => b !== benefit)
                     )
                   }
                 />
@@ -176,7 +176,7 @@ export default function AdminProjectsPage(): ReactNode {
                       <div>
                         <CardTitle className="text-xl">{project.name}</CardTitle>
                         <CardDescription>
-                          {project.id} •  {project.country} •  {project.type}
+                          {project.id} • {project.country} • {project.type}
                         </CardDescription>
                       </div>
                       <div className="flex flex-wrap gap-2">
