@@ -9,6 +9,7 @@ import { Review, ReviewSummary } from '@/lib/types/review';
 import { CarbonOffsetCalculator } from '@/app/components/carbon/CarbonOffsetCalculator';
 import { OffsetProjectSearch } from '@/app/components/carbon/OffsetProjectSearch';
 import { ProjectComparisonTool } from '@/app/components/carbon/ProjectComparisonTool';
+import { OffsetProjectFilters } from '@/lib/types/offsetProject';
 
 export default function SponsorReviewsPage() {
   const params = useParams();
@@ -20,7 +21,8 @@ export default function SponsorReviewsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [showProjectSearch, setShowProjectSearch] = useState(false);
-  const [showComparison, setShowComparison] = useState(false);
+const [showComparison, setShowComparison] = useState(false);
+  const [projectFilters, setProjectFilters] = useState<OffsetProjectFilters>({});
 
   useEffect(() => {
     fetchReviews();
@@ -104,9 +106,14 @@ export default function SponsorReviewsPage() {
         </button>
       </div>
 
-      {showComparison && <ProjectComparisonTool />}
+{showComparison && <ProjectComparisonTool />}
 
-      {showProjectSearch && <OffsetProjectSearch />}
+      {showProjectSearch && (
+        <OffsetProjectSearch
+          filters={projectFilters}
+          onFiltersChange={setProjectFilters}
+        />
+      )}
 
       {showCalculator && <CarbonOffsetCalculator />}
 

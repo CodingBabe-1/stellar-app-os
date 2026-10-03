@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, ref, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Badge } from '@/components/atoms/Badge';
@@ -24,12 +24,6 @@ export default function AdminProjectsPage(): ReactNode {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: mockAdminProjectDetails.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => 180,
-    overscan: 5,
-  });
 
   const filteredProjects = useMemo(() => {
     return mockAdminProjectDetails.filter((project) => {
@@ -59,6 +53,13 @@ export default function AdminProjectsPage(): ReactNode {
     () => Array.from(new Set(mockAdminProjectDetails.map((p) => p.certificationStandard))),
     []
   );
+
+  const virtualizer = useVirtualizer({
+    count: filteredProjects.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 180,
+    overscan: 5,
+  });
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8 sm:py-10">
@@ -102,7 +103,7 @@ export default function AdminProjectsPage(): ReactNode {
                     </CardHeader>
                     <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className="text-sm text-muted-foreground">{project.description}</p>
-                      <Button asChild stellar="primary" className="shrink-0">
+<Button asChild variant="primary" className="shrink-0">
                         <Link href={`/admin/projects/${project.id}`}>Open Detail View</Link>
                       </Button>
                     </CardContent>
