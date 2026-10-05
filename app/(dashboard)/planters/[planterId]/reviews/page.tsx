@@ -6,7 +6,6 @@ import { ReviewCard } from '@/app/components/reviews/ReviewCard';
 import { TeamReviewSummary } from '@/app/components/reviews/TeamReviewSummary';
 import { Review, ReviewSummary } from '@/lib/types/review';
 import { CarbonOffsetCalculator } from '@/app/components/carbon/CarbonOffsetCalculator';
-import { BulkPurchaseAgreement } from '@/app/components/marketplace/BulkPurchaseAgreement';
 import { ProjectComparison } from '@/app/components/reviews/ProjectComparison';
 import { ProjectComparisonItem } from '@/lib/types/projectComparison';
 
@@ -77,12 +76,12 @@ export default function PlanterReviewsPage() {
 
       <CarbonOffsetCalculator />
 
-<BulkPurchaseAgreement planterId={planterId} />
       <ProjectComparison
         items={comparisonItems}
         loading={comparisonLoading}
         error={comparisonError}
       />
+
       <div className="space-y-4">
         {reviews.length === 0 ? (
           <p className="text-center text-gray-500 py-8">No reviews yet.</p>

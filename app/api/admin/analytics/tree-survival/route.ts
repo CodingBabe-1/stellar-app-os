@@ -9,7 +9,7 @@ import { getFarmerPaymentMethods, parseFarmerPaymentMethodFilters } from '@/lib/
 import { getProjectComparison, parseProjectComparisonInput } from '@/lib/analytics/project-comparison';
 import { getFarmerIncomePrediction, parseFarmerIncomePredictionInput } from '@/lib/analytics/farmer-income';
 import { getComplianceReport, parseComplianceReportInput } from '@/lib/analytics/compliance-report';
-import { createBulkPurchaseAgreement, parseBulkPurchaseInput } from '@/lib/marketplace/bulk-purchase';
+import { searchOffsetProjects, parseOffsetProjectSearchParams } from '@/lib/offset/project-search';
 
 export const runtime = 'nodejs';
 
@@ -135,23 +135,24 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 /**
  * DELETE /api/admin/analytics/tree-survival
  *
-* Creates a bulk purchase agreement between a corporate buyer and farmers for
- * 100+ metric ton batches at negotiated volume-discounted rates.
+* Searches carbon offset projects with filters: project type, location,
+ * co-benefits (biodiversity, water, soil), certification standard, and
+ * price range.
  */
 export async function DELETE(request: Request): Promise<NextResponse> {
   if (!(await isAdminRequest())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
-const input = parseBulkPurchaseInput(await request.json());
-    const agreement = await createBulkPurchaseAgreement(getPool(), input);
-    return NextResponse.json(agreement, {
+const params = parseOffsetProjectSearchParams(new URL(request.url).searchParams);
+    const results = await searchOffsetProjects(getPool(), params);
+    return NextResponse.json(results, {
       headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' },
     });
   } catch (error) {
-const message = error instanceof Error ? error.message : 'Failed to create bulk purchase agreement';
-    const status = /must be|required|invalid|unsupported|non-negative|at least/.test(message) ? 400 : 500;
-    console.error('[bulk-purchase]', error);
+const message = error instanceof Error ? error.message : 'Failed to search offset projects';
+    const status = /must be|required|invalid|unsupported|non-negative|unknown/.test(message) ? 400 : 500;
+    console.error('[offset-project-search]', error);
     return NextResponse.json({ error: message }, { status });
   }
 }

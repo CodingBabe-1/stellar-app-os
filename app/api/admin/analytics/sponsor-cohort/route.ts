@@ -232,6 +232,7 @@ async function logAuditEvent(
       request.headers.get('x-admin-user') || request.headers.get('x-user-id') || 'unknown';
     await pool.query(
       `INSERT INTO admin_audit_log (actor_id, action, resource, details, created_at)
+       VALUES ($1, $2, 'sponsor-cohort-analytics', $3::jsonb, NOW())`,
 VALUES ($1, $2, 'sponsor-cohort-analytics', $3::jsonb, NOW())
       `,
       [actor, action, JSON.stringify(details)]
